@@ -10,7 +10,7 @@ def test_cache_defaults_and_round_trip(tmp_path):
     config = default_config("Upwork", ["Fiverr"])
     assert config.collection.api_cache is False
     assert config.collection.judge_cache is True
-    assert config.collection.remote is False
+    assert config.collection.remote is True
     save_config(project, config)
     assert load_config(project) == config
 

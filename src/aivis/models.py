@@ -6,8 +6,13 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class Record(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    schema: Literal[1] = 1
+    model_config = ConfigDict(
+        extra="forbid",
+        validate_by_alias=True,
+        validate_by_name=True,
+        serialize_by_alias=True,
+    )
+    schema_version: Literal[1] = Field(default=1, alias="schema")
 
 
 class Prompt(BaseModel):

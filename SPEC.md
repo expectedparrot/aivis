@@ -175,7 +175,11 @@ reporting:
 
 `aivis config set KEY VALUE`, `aivis config get KEY`, `aivis config competitors add NAME`, `aivis config competitors rm NAME` edit the file safely (round-trip YAML, preserve comments if practical; otherwise rewrite is acceptable).
 
-API keys are **never** stored in `aivis.yaml`. They come from the environment / EDSL's own key management (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `EXPECTED_PARROT_API_KEY`, etc.). `aivis doctor` (§9.8) reports which are present.
+API keys are **never** stored in `aivis.yaml`. Remote inference is the default
+and uses EDSL's `EXPECTED_PARROT_API_KEY`; direct provider keys
+(`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, etc.) are needed only
+when `collection.remote: false`. `aivis doctor` (§9.8) validates the selected
+authentication path without exposing key values.
 
 ---
 
@@ -663,7 +667,8 @@ Quickstart (init → add prompts → run → report); the API-vs-product proxy c
 
 ## 15. Open questions (implementer may decide; document choices)
 
-1. Whether to use EDSL remote inference (Expected Parrot server) or local-keys-only by default. Recommendation: local keys by default; expose `collection.remote: true`.
+1. EDSL remote inference (Expected Parrot server) is the default. Set
+   `collection.remote: false` explicitly for local provider keys.
 2. Perplexity citation metadata shape via EDSL — verify what the `sonar` result rows expose; if citations aren't accessible through EDSL results, either call Perplexity's API directly in a small adapter within the EDSL collector, or defer native citations for that engine to v2.
 3. Exact Google AI Mode entry URL/flow at implementation time — selectors module owns this; expect churn.
 4. Whether `response_text` should be stored with normalized line endings only, or also unicode-normalized (NFC), to maximize diff stability across engines that vary whitespace. Recommendation: LF normalization + NFC, applied identically in the collector and documented.

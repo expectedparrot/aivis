@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import typer
+from edsl import Coop
 from rich.console import Console
 
 from . import __version__
@@ -258,6 +259,7 @@ def run_cmd(
             {
                 "dry_run": True,
                 "plan": plan.model_dump(),
+                "remote_inference": config.collection.remote,
                 "collection_calls": calls,
                 "judge_first_pass_calls": calls,
                 "judge_framing_calls": f"0–{calls * len(config.tracked_brands)}",
@@ -379,7 +381,12 @@ def doctor(fix: bool = typer.Option(False, "--fix")) -> None:
     checks["env_file"] = env_state["path"]
     checks["api_keys_present"] = env_state["present_keys"]
     required = {"gpt": "OPENAI_API_KEY", "claude": "ANTHROPIC_API_KEY", "gemini": "GOOGLE_API_KEY"}
-    if not config.collection.remote:
+    checks["remote_inference"] = config.collection.remote
+    if config.collection.remote:
+        checks["expected_parrot_auth"] = Coop().has_api_key
+        if not checks["expected_parrot_auth"]:
+            errors.append("EXPECTED_PARROT_API_KEY is missing for remote inference")
+    else:
         for engine in (x for x in config.engines.api if x.enabled):
             key = next(
                 (value for prefix, value in required.items() if engine.id.startswith(prefix)), None

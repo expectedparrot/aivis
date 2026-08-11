@@ -62,7 +62,7 @@ class Collection(StrictModel):
     timeout_seconds: int = Field(default=120, ge=1)
     max_concurrency: int = Field(default=8, ge=1)
     retries: int = Field(default=2, ge=0)
-    remote: bool = False
+    remote: bool = True
 
 
 class PlaywrightConfig(StrictModel):

@@ -35,6 +35,12 @@ aivis report-context --run last --out report-context.json
 
 The default interface emits one JSON envelope to stdout; use `--human` for Rich tables. Project discovery walks upward from the current directory, or `--project PATH` selects one explicitly. Commit `.aivis/data/` after each run: new runs are additions, while versioned re-extraction produces narrow semantic changes.
 
+New projects use EDSL remote inference through Expected Parrot by default, so
+one `EXPECTED_PARROT_API_KEY` covers every configured engine and the judge.
+Set `collection.remote: false` only when intentionally using direct provider
+keys. `aivis run --dry-run` reports the selected inference mode and `aivis
+doctor` validates the corresponding authentication path.
+
 `report-context` creates one deterministic JSON handoff for a driving agent. It contains run coverage, reportability limits, metrics with denominators, engine and cluster slices, prompt-level outcomes, and exact response excerpts linked to stored sample files. It does not draft or render a narrative report.
 
 ## Measurement and cost caveats

@@ -29,6 +29,8 @@ def test_serialization_is_byte_identical(tmp_path):
     store.write_prompts([item])
     path = store.data / "prompts.json"
     first = path.read_bytes()
+    assert b'"schema": 1' in first
+    assert b'"schema_version"' not in first
     store.write_prompts(store.load_prompts())
     assert path.read_bytes() == first
     assert first.endswith(b"\n")
