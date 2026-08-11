@@ -119,6 +119,25 @@ def default_config(brand: str, competitors: list[str]) -> Config:
     return Config(brand=Brand(name=brand), competitors=[Brand(name=x) for x in competitors])
 
 
+def configure_collection(
+    config: Config, *, engines: list[str], samples_per_prompt: int
+) -> Config:
+    requested = {item.strip() for item in engines if item.strip()}
+    if not requested:
+        raise ValueError("At least one API engine is required")
+    available = {item.id for item in config.engines.api}
+    unknown = sorted(requested - available)
+    if unknown:
+        raise ValueError(
+            f"Unknown API engine(s): {', '.join(unknown)}; available: {', '.join(sorted(available))}"
+        )
+    data = config.model_dump(mode="json")
+    for engine in data["engines"]["api"]:
+        engine["enabled"] = engine["id"] in requested
+    data["sampling"]["runs_per_prompt"] = samples_per_prompt
+    return Config.model_validate(data)
+
+
 def get_key(data: Any, key: str) -> Any:
     for part in key.split("."):
         if isinstance(data, list):

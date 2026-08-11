@@ -13,7 +13,15 @@ from rich.console import Console
 
 from . import __version__
 from .collect.edsl_collector import EDSLCollector
-from .config import Brand, default_config, get_key, load_config, save_config, set_key
+from .config import (
+    Brand,
+    configure_collection,
+    default_config,
+    get_key,
+    load_config,
+    save_config,
+    set_key,
+)
 from .environment import load_local_env
 from .export import export_csv, export_json
 from .extract import extract_run
@@ -225,6 +233,33 @@ def competitor_rm(name: str) -> None:
     emit("aivis config competitors rm", {"competitors": [x.name for x in config.competitors]})
 
 
+@app.command()
+def configure(
+    engines: str = typer.Option(..., "--engines", help="Comma-separated configured API engines."),
+    samples_per_prompt: int = typer.Option(3, "--samples-per-prompt", min=1),
+) -> None:
+    project = project_path()
+    try:
+        config = configure_collection(
+            load_config(project),
+            engines=engines.split(","),
+            samples_per_prompt=samples_per_prompt,
+        )
+    except ValueError as exc:
+        fail("aivis configure", "invalid_collection_config", str(exc))
+    with Store(project).locked():
+        save_config(project, config)
+    emit(
+        "aivis configure",
+        {
+            "engines": [item.id for item in config.engines.api if item.enabled],
+            "samples_per_prompt": config.sampling.runs_per_prompt,
+            "remote_inference": config.collection.remote,
+        },
+        next_steps=["aivis prompts list", "aivis run --dry-run", "aivis doctor"],
+    )
+
+
 @app.command("run")
 def run_cmd(
     engines: str | None = typer.Option(None, "--engines"),
@@ -331,7 +366,7 @@ def report(
     project = project_path()
     store = Store(project)
     config = load_config(project)
-    if run is None:
+    if run is None or run == "last":
         complete = [x for x in store.list_runs() if x.status == "complete"]
         if not complete:
             fail("aivis report", "no_complete_run", "No complete run is available")
@@ -418,6 +453,8 @@ def guide() -> None:
             "workflow": [
                 "aivis init --brand NAME --competitors A,B",
                 "aivis prompts add TEXT --cluster category",
+                "aivis prompts list",
+                "aivis configure --engines ENGINE[,ENGINE] --samples-per-prompt N",
                 "aivis run --dry-run",
                 "aivis doctor",
                 "aivis run",
@@ -425,6 +462,7 @@ def guide() -> None:
             ]
         },
         next_steps=[
+            "Configure engines and repetitions atomically before preflight.",
             "Run 'aivis doctor' before paid collection.",
             "Commit .aivis/data/ after each completed run.",
         ],

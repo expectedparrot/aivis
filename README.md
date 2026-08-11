@@ -26,6 +26,7 @@ aivis version
 aivis capabilities
 aivis init --brand Upwork --competitors Fiverr,Toptal --no-generate
 aivis prompts add "how do I hire a freelance developer" --cluster category
+aivis configure --engines claude-sonnet-4-6 --samples-per-prompt 3
 aivis run --dry-run
 aivis doctor
 aivis run
